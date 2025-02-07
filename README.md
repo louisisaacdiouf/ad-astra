@@ -1,7 +1,6 @@
 # ad-astra
 
-
-### **Architecture du Pipeline**
+## **Architecture du Pipeline**
 
 1. **Extracteur** (Rust) : Extraction du texte et des coordonnées depuis le PDF.  
 2. **Analyseur** (Python) : Détection des données sensibles via ML/NLP.  
@@ -15,10 +14,12 @@
 ### **1. Extracteur (Rust) : Extraction des Textes et Coordonnées**
 
 **Rôle** :  
+
 - Identifier si le PDF est textuel ou scanné.  
 - Extraire les zones de texte avec leurs coordonnées (en points PDF ou pixels).  
 
 **Outils** :  
+
 - **PDF textuel** : Bibliothèque `pdf-extract` ou `lopdf` pour extraire le texte et les métadonnées de position.  
 - **PDF scanné/Image** :  
   - Conversion PDF → images avec `pdfium-render` (liaison Rust de PDFium).  
@@ -27,6 +28,7 @@
 
 **Sortie** :  
 Un fichier JSON structuré comme :  
+
 ```json
 {
   "pages": [
@@ -50,6 +52,7 @@ Un fichier JSON structuré comme :
 ```
 
 **Pourquoi Rust** :  
+
 - Performances élevées pour le traitement d’images et l’OCR parallélisé.  
 - Gestion mémoire sécurisée pour éviter les fuites avec des PDF volumineux.  
 
@@ -58,10 +61,12 @@ Un fichier JSON structuré comme :
 ### **2. Analyseur (Python) : Détection des Données Sensibles**
 
 **Rôle** :  
+
 - Identifier les données sensibles (noms, numéros de sécurité sociale, etc.) dans le JSON.  
 - Combiner règles regex, modèles de NLP (spaCy, Flair), et LLMs (optionnel).  
 
 **Outils** :  
+
 - **Regex** : Validation basique (e-mails, numéros de téléphone).  
 - **ML/NLP** :  
   - `spaCy` avec modèle `fr_core_news_lg` pour la NER (reconnaissance d'entités).  
@@ -71,6 +76,7 @@ Un fichier JSON structuré comme :
 
 **Sortie** :  
 Un JSON enrichi avec les flags `is_sensitive` :  
+
 ```json
 {
   "pages": [
@@ -88,6 +94,7 @@ Un JSON enrichi avec les flags `is_sensitive` :
 ```
 
 **Pourquoi Python** :  
+
 - Écosystème mature pour le NLP/ML et intégration simple avec les LLMs.  
 
 ---
@@ -95,14 +102,17 @@ Un JSON enrichi avec les flags `is_sensitive` :
 ### **3. Caviardeur (Go) : Modification du PDF**
 
 **Rôle** :  
+
 - Superposer des rectangles noirs sur les zones sensibles en utilisant les coordonnées extraites.  
 
 **Outils** :  
+
 - Bibliothèque `unidoc` (Go) pour manipuler les PDF :  
   - Ajout de formes vectorielles (rectangles noirs) aux positions spécifiées.  
   - Suppression permanente du texte sous-jacent (pour éviter les fuites).  
 
 **Exemple de Code Go** :  
+
 ```go
 package main
 
@@ -126,6 +136,7 @@ func redactPDF(inputPath string, outputPath string, sensitiveRegions []Region) e
 ```
 
 **Pourquoi Go** :  
+
 - Compilation rapide et exécution légère pour des microservices.  
 - Bibliothèques PDF fiables comme `unidoc` (version commerciale) ou `gofpdf` (open-source).  
 
@@ -134,15 +145,18 @@ func redactPDF(inputPath string, outputPath string, sensitiveRegions []Region) e
 ### **4. Orchestrateur (Go) : Gestion du Workflow**
 
 **Rôle** :  
+
 - Exposer une API REST pour uploader le PDF.  
 - Coordonner l’enchaînement Extracteur → Analyseur → Caviardeur.  
 - Gérer les erreurs et les logs.  
 
 **Outils** :  
+
 - Framework web `Gin` ou `Echo` pour l’API.  
 - Communication inter-services via gRPC (pour la performance) ou RabbitMQ (pour l’async).  
 
 **Exemple d’Endpoint** :  
+
 ```go
 // Gin example
 router.POST("/process-pdf", func(c *gin.Context) {
@@ -180,6 +194,7 @@ router.POST("/process-pdf", func(c *gin.Context) {
 ### **Alternative pour le Caviardage (Rust)**
 
 Si la manipulation PDF en Go est limitée, remplacer le Caviardeur par du Rust avec `lopdf` :  
+
 ```rust
 use lopdf::{Document, Object, Rectangle};
 
