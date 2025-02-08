@@ -2,9 +2,9 @@ from langdetect import detect
 
 
 MODEL_MAP = {
-    "fr": "fr_core_news_sm",
-    "en": "en_core_web_sm",
-    "es": "es_core_news_sm"
+    "fr": "fr_core_news_lg",
+    "en": "en_core_web_lg",
+    "es": "es_core_news_lg"
 }
 
 def detect_language(text):
