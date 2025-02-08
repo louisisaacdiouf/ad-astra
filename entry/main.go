@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -43,7 +44,7 @@ type OrchestrateRequest struct {
 
 type OrchestrateResponse struct {
 	ExtractedText string   `json:"extracted_text"`
-	Entities []Entity `json:"entities"`
+	Entities      []Entity `json:"entities"`
 }
 
 // callExtractionAPI appelle le service d'extraction.
@@ -112,6 +113,7 @@ func callLabellingAPI(text string, labellingAddr string) (*LabellingResponse, er
 // appelle successivement le service d'extraction et le service de labellisation,
 // puis renvoie le dictionnaire de tous les termes labellisés.
 func handlerOrchestrate(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	var req OrchestrateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Requête invalide", http.StatusBadRequest)
@@ -138,13 +140,20 @@ func handlerOrchestrate(w http.ResponseWriter, r *http.Request) {
 
 	orchestrateResp := OrchestrateResponse{
 		ExtractedText: extractionResp.Text,
-		Entities: labellingResp.Entities,
+		Entities:      labellingResp.Entities,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(orchestrateResp); err != nil {
 		http.Error(w, "Erreur lors de l'encodage de la réponse", http.StatusInternalServerError)
 	}
+
+	fileInfo, err := os.Stat(req.FilePath)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erreur récupération des informations du fichier : %v", err), http.StatusInternalServerError)
+		return
+	}
+	fmt.Printf("\n--\n\nFile: %s\nSize: %v bytes\nProcessing duration: %s\n", fileInfo.Name(), fileInfo.Size(), time.Since(start))
 }
 
 func main() {
