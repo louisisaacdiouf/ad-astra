@@ -1,5 +1,7 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use dotenv::dotenv;
 use serde::Deserialize;
+use std::env;
 
 #[derive(Deserialize)]
 struct PdfRequest {
@@ -28,12 +30,20 @@ async fn extract_pdf_text(pdf_req: web::Json<PdfRequest>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Charger les variables d'environnement depuis le fichier .env
+    dotenv().ok();
+
+    // Récupérer l'adresse du serveur depuis la variable d'environnement SERVER_ADDR
+    let server_addr = env::var("EXTRACTION_SERVICE_ADDR").unwrap_or_else(|_| "127.0.0.1:8081".to_string());
+
+    println!("Serveur d'extraction écoute sur {}", server_addr);
+
     HttpServer::new(|| {
         App::new()
             // Route POST /extract pour traiter l'extraction
             .route("/extract", web::post().to(extract_pdf_text))
     })
-    .bind("127.0.0.1:8080")?
+    .bind(&server_addr)?
     .run()
     .await
 }
