@@ -16,7 +16,7 @@ def detect_language(text):
     print(text)
     try:
         return MODEL_MAP[detect(text)]
-    except:
+    except Exception:
         return "unknown"
 
 

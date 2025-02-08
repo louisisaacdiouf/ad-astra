@@ -108,7 +108,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     
     # Créer une instance du processeur
-    processor = DocumentProcessor()
+    processor = DocumentPpwdrocessor()
     
     # Utiliser le chemin correct vers votre image
     image_path = "hackathon.png"  # Assurez-vous que ce fichier existe
